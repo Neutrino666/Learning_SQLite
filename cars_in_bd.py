@@ -1,43 +1,33 @@
-import sqlite3
+# -*- coding: utf-8 -*-
 
-
-def add_car_in_bd(db_cars, car_info):
-    with sqlite3.connect(db_cars) as db_cars_conn:
-        cursor = db_cars_conn.cursor()
-        cursor.execute("""INSERT INTO cars(model, color, price) 
-            VALUES (?, ?, ?)""", car_info)
-        db_cars_conn.commit()
-
-
-def create_bd(db_name):
-    try:
-        with sqlite3.connect(db_name) as db_connection:
-            cursor = db_connection.cursor()
-            cursor.execute("""CREATE TABLE IF NOT EXISTS cars(
-                car_id INTEGER PRIMARY KEY AUTOINCREMENT,
-                model TEXT NOT NULL,
-                color TEXT NOT NULL,
-                price INT NOT NULL)
-            """)
-            db_connection.commit()
-
-    except sqlite3.Error as error:
-        print(f'Error: {error} while connecting to {db_name}')
-
+from car_in_bd_engine import add_car_in_bd, create_bd, show_cars, user_answer, find_car
+from car_in_bd_engine import del_car, update_bd
 
 db_name = 'cars.db'
-date_car = (
+cars_data = (
     ('lada', 'blue', 200000),
     ('mazda', 'yellow', 5000000)
 )
+user_choice = None
 
+# создать таблицу если её нет
 create_bd(db_name=db_name)
 
-for car_info in date_car:
-    add_car_in_bd(db_cars=db_name, car_info=car_info)
+while True:
+    user_choice = user_answer()
 
-with sqlite3.connect(db_name) as db_conn:
-    cursor = db_conn.cursor()
-    cursor.execute("SELECT * FROM cars")
-    for result in cursor:
-        print(result)
+    if user_choice == 1:    # Показать таблицу
+        show_cars(db_name=db_name)
+    elif user_choice == 2:  # Добавить в таблицу
+        add_car_in_bd(db_cars=db_name)
+    elif user_choice == 3:  # Найти в таблице
+        print(find_car(db_name=db_name))
+    elif user_choice == 4:  # Изменить
+        update_bd(db_name=db_name)
+    elif user_choice == 5:  # Удалить
+        del_car(db_name=db_name)
+    elif user_choice == 6 or user_choice == "exit":  # Выход
+        break
+    else:
+        print(f"Неверный ввод данных {user_choice}")
+
