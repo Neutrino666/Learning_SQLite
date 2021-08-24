@@ -11,7 +11,6 @@ def user_answer():
         | 5. Удалить                 6. Выход           |
         \_______________________________________________/
     """
-    user_input = None
 
     print(user_menu)
 
@@ -24,15 +23,16 @@ def user_answer():
         elif user_input == "exit":
             return user_input
 
-        print("Введите число от 1 до 6")
+        print("Введите число от 1 до 6 или exit для выхода.")
 
 
 def add_car_in_bd(db_cars):
     # Добваление новых значений в таблицу
-    car_info = None
 
     while True:
-        car_info = input('Модель(без пробелов, "-" и ".")/цвет/цена: \n').split("/")
+        car_info = input('Модель(без пробелов, "-" и ".")/цвет/цена (выход - exit): \n').split("/")
+        if car_info[0] == "exit":
+            return None
         if len(car_info) != 3:
             continue
         elif car_info[0].isalnum and car_info[1].isalpha and car_info[2].isdigit:
@@ -65,10 +65,6 @@ def create_bd(db_name):
 def check_model_car(massage):
     # Проверка корректности ввода по модели
     while True:
-        massage = (
-            "\n" + massage +
-            "(без пробелов, только буквы) или exit: "
-            )
         model = input(massage)
         if model.isalpha():
             return model
@@ -78,18 +74,26 @@ def check_model_car(massage):
 
 def find_car(db_name):
     # Поиск по модели
-    massage = "Введите модель автомобиля которую надо найти\n"
-
-    model = check_model_car(massage=massage)
-    if model:
+    massage = (
+            "Введите модель автомобиля которую надо найти\n" +
+            "(без пробелов, только буквы) или exit: "
+        )
+    while True:
+        model = check_model_car(massage=massage)
         with sqlite3.connect(db_name) as db_connection:
             cursor = db_connection.cursor()
-            cursor.execute("SELECT * FROM cars WHERE model = ?", (model, ))
+            find_request = "SELECT * FROM cars WHERE model = ?"
+            cursor.execute(find_request, (model, ))
             result = cursor.fetchall()
             if result:
-                return result
+                print(*result)
+                break
+            elif result == "exit":
+                break
+            elif not result:
+                print("Данной модели нет в БД")
             else:
-                return "Данной модели нет в БД"
+                print("Непредвиденные данные ", result)
 
 
 def show_cars(db_name):
@@ -103,69 +107,126 @@ def show_cars(db_name):
 
 def del_car(db_name):
     # Удаление по модели
-    massage = "Введите модель автомобиля которую надо удалить\n"
-    model = check_model_car(massage=massage)
-    with sqlite3.connect(db_name) as db_connection:
-        cursor = db_connection.cursor()
-        cursor.execute("DELETE FROM cars WHERE model = ?", (model, ))
-        db_connection.commit()
+    model = None
+    while True:
+        massage = "Введите модель автомобиля которую надо удалить\n"
+        model = input(massage)
+        if model == "exit":
+            break
+        if model:
+            with sqlite3.connect(db_name) as db_connection:
+                cursor = db_connection.cursor()
+                cursor.execute("DELETE FROM cars WHERE model = ?", (model, ))
+                db_connection.commit()
+        else:
+            print("Непредвиденная ошибка, ", model)
 
 
 def check_id(db_name, id):
-    # Проверка корректности ввода id
+    # Проверка наличия id
     with sqlite3.connect(db_name) as db_connection:
         cursor = db_connection.cursor()
         cursor.execute("SELECT * FROM cars WHERE car_id = ?", (id, ))
         result = cursor.fetchall()
         if result:
-            print(result) # вывод на экран строки по id
+            print(result)   # вывод на экран строки по id
             return True
         else:
             return False
 
 
-def check_collect_update_data():
-    # Проверить корректность ввода для update 
-    massage = """
-        Напишите что хотите изменить формат записи ниже
-        model=нива/color=красный/price=500000
+def check_collect_update_data(names_columns, user_input):
+    # Проверяет корректность собранных данных
+    cach_name = None
+    for column in names_columns:
+        for value in user_input:
+            if len(value.split("=")) != 2:
+                return False
+            column_name, column_value = value.split("=")
+            if column_name in column and cach_name != column:
+                if len(column_name) != len(column):
+                    return False
+                if column_name == "model" or column_value == "color":
+                    if not column_value.isalpha():
+                        print("Ошибка ошибка ошибка")
+                        return False
+                if column_name == "price":
+                    if not column_value.isdigit():
+                        print("Ошибка ошибка ошибка")
+                        return False
+                if column_name not in names_columns:
+                    return False
+    return True
 
-    """
+
+def collect_update_data():
+    # Собирает нужные данные для вбивания
+    massage = """
+        Напишите что хотите изменить,
+        формат записи ниже(exit для выхода)
+        model=нива/color=красный/price=500000
+        """
+    error_message = "Введите корректные данные!"
+    names_columns = "model", "color", "price"
+
     while True:
         user_input = input(massage).split("/")
-
-
-def collect_update_data(db_name, id):    
-    check_collect_update_data()
-    # Собирает нужные данные для вбивания
+        if user_input[0] == "exit":
+            return None
+        if 3 < len(user_input) or user_input == [""]:
+            print("Количество колонок не верное!!", error_message)
+            continue
+        if check_collect_update_data(names_columns=names_columns, user_input=user_input):
+            return user_input
+        else:
+            print(error_message)
 
 
 def get_update_data(db_name):
-    # Получает необходим данные для ввода
+    # Получает необходимые данные для внесения в БД
     massage = (
             "Введите id авто из БД для изменения\n" +
             "(exit для выхода из меню обновления): "
         )
     id = input(massage)
+
     while True:
         if id == "exit":
-                return None
+            return None
         if id.isdigit():
             if check_id(db_name=db_name, id=id):           
-                new_data = collect_update_data(db_name=db_name, id=id)
-                if new_data == "exit":
-                    return None
-                elif new_data:
-                    return new_data
+                break
         print("id введен не корректно либо его нет в БД")
         id = input(massage)
 
+    new_data = collect_update_data()
+    if new_data is None:
+        return new_data
+    return new_data, id
+
 
 def update_bd(db_name):
-    # Выполняет вбивание обновленных данных
+    # Вносит обновленные данные
     update_data = get_update_data(db_name)
-    if update_data: 
+    if update_data:
+        update_command = "UPDATE cars SET"
+        filter_id = f" WHERE car_id = ?"
+        id_car = int(update_data[1])
+        record_list = list()
+        for values in update_data[:-1]:
+            for value in values:
+                title, parameter_car = value.split("=")
+                update_command += f" {title} = ?,"
+                record_list.append(parameter_car)
+        update_command = update_command[:-1] + filter_id
+        record_list.append(id_car)
         with sqlite3.connect(db_name) as db_cars_conn:
             cursor = db_cars_conn.cursor()
-            cursor.execute(update_data)
+            cursor.execute(update_command, record_list)
             db_cars_conn.commit()
+        show_cars(db_name)
+    elif update_data is None:
+        print("Отмена изменений")
+    else:
+        print("Непредвиденная ошибка!")
+

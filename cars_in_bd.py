@@ -21,7 +21,7 @@ while True:
     elif user_choice == 2:  # Добавить в таблицу
         add_car_in_bd(db_cars=db_name)
     elif user_choice == 3:  # Найти в таблице
-        print(find_car(db_name=db_name))
+        find_car(db_name=db_name)
     elif user_choice == 4:  # Изменить
         update_bd(db_name=db_name)
     elif user_choice == 5:  # Удалить
@@ -31,3 +31,4 @@ while True:
     else:
         print(f"Неверный ввод данных {user_choice}")
 
+input("Press enter to exit")
