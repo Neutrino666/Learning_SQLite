@@ -5,11 +5,10 @@ from user_engine import user_answer
 
 db_name = 'cars.db'
 user_choice = None
-
 car_database = CarDatabase(db_name=db_name)
+
 # создать таблицу если её нет
 car_database.create_bd()
-
 
 while True:
     user_choice = user_answer()
@@ -27,6 +26,6 @@ while True:
     elif user_choice == 6 or user_choice == "exit":  # Выход
         break
     else:
-        print(f"Неверный ввод данных {user_choice}")
+        print(f"Выберите пункт меню - {user_choice} не корректен!")
 
 input("Press enter to exit")

@@ -185,7 +185,7 @@ class CarDatabase:
             if id.isdigit():
                 if self.check_id(id=id):
                     break
-            print("id введен не корректно либо его нет в БД")
+            print("id введен не корректно либо его нет в БД!")
             id = input(massage)
 
         new_data = self.collect_update_data()
@@ -217,4 +217,3 @@ class CarDatabase:
             print("Отмена изменений")
         else:
             print("Непредвиденная ошибка!")
-
