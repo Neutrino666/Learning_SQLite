@@ -217,3 +217,7 @@ class CarDatabase:
             print("Отмена изменений")
         else:
             print("Непредвиденная ошибка!")
+
+
+class Customer:
+    pass
